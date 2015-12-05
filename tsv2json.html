@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>
+  </title>
+  <link rel=stylesheet href=tsv2json.css></link>
+
+</head>
+<body>
+
+<header>
+  <h1>
+    <button id=afterButton>convert</button> tab-separated values to JSON
+  </h1>
+  <label>Transpose matrix: <input id=transposeChecked name=transposeChecked type=checkbox value=false></label>
+</header>
+
+<main>
+
+  <div id=before>
+    <textarea spellcheck=false></textarea>
+  </div>
+  
+  <div id=after>
+    <textarea spellcheck=false></textarea>
+  </div>
+
+</main>
+
+<script>
+if (!String.prototype.trim) {
+  String.prototype.trim = function () {
+    return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
+  };
+}
+
+var transpose = array => {
+  return Object.keys(array[0]).map(column => {
+    return array.map(row => row[column]); 
+  });
+}
+
+var 
+  before = document.querySelectorAll('#before'),
+  beforeTA = document.querySelector('#before textarea'),
+
+  after = document.querySelectorAll('#after'),
+  afterTA = document.querySelector('#after textarea'),
+
+  afterButton = document.querySelector('#afterButton');
+
+function tsv2matrix(text){
+  var 
+    text = beforeTA.value.trim(),
+    lines = text.split(/\n/g);
+
+  return lines
+    .map(line => line.trim())
+    .map(line => line.split('\t').map(cell => cell.trim()));
+}
+
+function tsv2json(matrix){
+  var headers = matrix.shift();
+
+  return matrix.map(row => {
+    return headers.reduce((obj, header, i) => {
+      obj[header] = row[i] ;
+      return obj;
+    }, {})
+  }) 
+}
+
+function convert(){
+  
+  var transposeChecked = document.querySelector('input#transposeChecked');
+
+  var 
+    text = beforeTA.value, 
+    matrix = tsv2matrix(text);
+
+  if(transposeChecked.checked){ matrix = transpose(matrix)} 
+
+  var data = tsv2json(matrix);
+
+  afterTA.value = JSON.stringify(data, null, 2); 
+}
+
+afterButton.addEventListener('click', convert);
+beforeTA.addEventListener('input', convert);
+
+</script>
+</body>
+</html>
